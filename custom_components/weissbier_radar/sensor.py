@@ -1,6 +1,6 @@
 """
 Sensor platform for Weissbier Radar integration.
-Provides read-only sensors for beer prices and offers.
+Provides numeric price sensors with offer tracking and regular pricing fallbacks.
 """
 
 from __future__ import annotations
@@ -9,6 +9,7 @@ import logging
 from typing import Any
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
@@ -65,6 +66,10 @@ class WeissbierBaseSensor(CoordinatorEntity[WeissbierRadarDataUpdateCoordinator]
     """Base sensor for Weissbier Radar."""
 
     _attr_has_entity_name = True
+    _attr_device_class = SensorDeviceClass.MONETARY
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = "€"
+    _attr_suggested_display_precision = 2
 
     def __init__(
         self,
@@ -87,7 +92,7 @@ class WeissbierBaseSensor(CoordinatorEntity[WeissbierRadarDataUpdateCoordinator]
 
 
 class WeissbierBestPriceSensor(WeissbierBaseSensor):
-    """Sensor showing the lowest active price across all stores for a product."""
+    """Sensor showing lowest price (deal or regular) across all stores for a product."""
 
     def __init__(
         self,
@@ -100,46 +105,38 @@ class WeissbierBestPriceSensor(WeissbierBaseSensor):
         self._attr_unique_id = f"{entry.entry_id}_{prod_id}_bester_preis"
         self._attr_name = f"{self.prod_info['name']} Bester Preis"
         self._attr_icon = "mdi:tag-heart"
-        self._attr_native_unit_of_measurement = "€"
-        self._attr_suggested_display_precision = 2
 
     @property
-    def native_value(self) -> float | str | None:
-        """Return the lowest available price."""
+    def native_value(self) -> float | None:
+        """Return the lowest available price as numeric float."""
         data = self.product_data
         best_price = data.get("best_price")
         if best_price is not None:
             return float(best_price)
-        return "Kein Angebot"
+        return float(self.prod_info.get("regular_price", 20.49))
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return additional attributes."""
         data = self.product_data
-        stores = data.get("stores", {})
+        has_offer = data.get("has_any_offer", False)
         
-        # Find store with the best price
-        best_store = "Unbekannt"
-        valid_until = data.get("valid_until")
-        
-        active_stores = [s for s in stores.values() if s.get("has_offer") and s.get("price")]
-        if active_stores:
-            cheapest = min(active_stores, key=lambda x: x["price"])
-            best_store = cheapest.get("store", "Unbekannt")
-            valid_until = cheapest.get("valid_until", valid_until)
-
         return {
             "produkt": self.prod_info["name"],
-            "bester_haendler": best_store,
-            "gueltig_bis": valid_until,
-            "angebots_link": self.prod_info.get("url"),
+            "im_angebot": has_offer,
+            "status": "Angebot aktiv" if has_offer else "Regulärer Preis (Kein Angebot)",
+            "normalpreis": f"{data.get('normalpreis', 20.49):.2f} €",
+            "ersparnis": f"{data.get('ersparnis', 0.0):.2f} €",
+            "bester_haendler": data.get("best_store", "Regulärer Handel"),
+            "gueltig_bis": data.get("valid_until", "Dauerhaft"),
+            "angebots_link": self.prod_info.get("meinprospekt_url"),
             "plz": self.coordinator.zip_code,
             "gebinde": "Kasten 20 x 0,5l",
         }
 
 
 class WeissbierStoreSensor(WeissbierBaseSensor):
-    """Sensor showing product deal status for a specific store."""
+    """Sensor showing product deal or regular price for a specific store."""
 
     def __init__(
         self,
@@ -156,18 +153,17 @@ class WeissbierStoreSensor(WeissbierBaseSensor):
         self._attr_unique_id = f"{entry.entry_id}_{prod_id}_{store_id}"
         self._attr_name = f"{self.prod_info['name']} {self.store_info['name']}"
         self._attr_icon = self.store_info.get("icon", "mdi:store")
-        self._attr_native_unit_of_measurement = "€"
-        self._attr_suggested_display_precision = 2
 
     @property
-    def native_value(self) -> float | str | None:
-        """Return the current store price or status."""
+    def native_value(self) -> float | None:
+        """Return the current store price (deal price or regular price)."""
         data = self.product_data
         store_data = data.get("stores", {}).get(self.store_id, {})
         
-        if store_data.get("has_offer") and store_data.get("price") is not None:
-            return float(store_data["price"])
-        return "Kein Angebot"
+        price = store_data.get("price")
+        if price is not None:
+            return float(price)
+        return float(self.prod_info.get("regular_price", 20.49))
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -179,9 +175,13 @@ class WeissbierStoreSensor(WeissbierBaseSensor):
         return {
             "haendler": self.store_info["name"],
             "produkt": self.prod_info["name"],
-            "angebot_aktiv": has_offer,
-            "gueltig_bis": store_data.get("valid_until"),
+            "im_angebot": has_offer,
+            "status": "Angebot aktiv" if has_offer else "Regulärer Preis (Kein Angebot)",
+            "normalpreis": f"{store_data.get('normalpreis', 20.49):.2f} €",
+            "ersparnis": f"{store_data.get('ersparnis', 0.0):.2f} €",
+            "gueltig_bis": store_data.get("valid_until") or "Dauerhaft",
+            "filialen": store_data.get("locations", ""),
             "gebinde": "Kasten 20 x 0,5l",
             "plz": self.coordinator.zip_code,
-            "angebots_link": self.prod_info.get("url"),
+            "angebots_link": self.prod_info.get("meinprospekt_url"),
         }

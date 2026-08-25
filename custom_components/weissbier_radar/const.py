@@ -4,17 +4,20 @@ Constants for the Weissbier Radar integration.
 
 DOMAIN = "weissbier_radar"
 NAME = "Weissbier Radar"
-VERSION = "1.1.0"
+VERSION = "1.2.0"
 
 # Default configuration values
 DEFAULT_ZIP_CODE = "84385"
 DEFAULT_SCAN_INTERVAL_HOURS = 6
+DEFAULT_DEAL_THRESHOLD = 20.00
+DEFAULT_REGULAR_PRICE = 20.49
 
 # Supported beers / products
 CONF_PRODUCTS = "products"
 CONF_ZIP_CODE = "zip_code"
 CONF_STORES = "stores"
 CONF_SCAN_INTERVAL = "scan_interval"
+CONF_DEAL_THRESHOLD = "deal_threshold"
 
 DEFAULT_PRODUCTS = [
     "franziskaner",
@@ -26,6 +29,7 @@ PRODUCT_DEFINITIONS = {
         "id": "franziskaner",
         "name": "Franziskaner Weißbier",
         "slug": "franziskaner",
+        "regular_price": 20.49,
         "icon": "mdi:glass-mug-variant",
         "meinprospekt_url": "https://www.meinprospekt.de/angebote/franziskaner",
         "kaufda_url": "https://www.kaufda.de/Angebote/Franziskaner",
@@ -35,6 +39,7 @@ PRODUCT_DEFINITIONS = {
         "id": "erdinger",
         "name": "Erdinger Weißbier",
         "slug": "erdinger",
+        "regular_price": 20.49,
         "icon": "mdi:glass-mug",
         "meinprospekt_url": "https://www.meinprospekt.de/angebote/erdinger",
         "kaufda_url": "https://www.kaufda.de/Angebote/Erdinger",
