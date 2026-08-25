@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up Weissbier Radar",
+        "description": "Monitor weekly supermarket deals for Franziskaner and Erdinger Weissbier across Netto, Edeka, Kaufland, etc.",
+        "data": {
+          "zip_code": "Postal code (PLZ)",
+          "products": "Selected Beers",
+          "stores": "Supermarkets / Discounters",
+          "scan_interval": "Update interval (hours)"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "An instance for this postal code is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure Weissbier Radar options",
+        "data": {
+          "zip_code": "Postal code (PLZ)",
+          "products": "Selected Beers",
+          "stores": "Supermarkets / Discounters",
+          "scan_interval": "Update interval (hours)"
+        }
+      }
+    }
+  }
+}

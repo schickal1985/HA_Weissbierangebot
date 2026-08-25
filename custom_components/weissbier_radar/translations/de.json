@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Weissbier-Radar einrichten",
+        "description": "Überwache wöchentliche Angebote für Franziskaner und Erdinger Weißbier bei Netto, Edeka, Kaufland etc.",
+        "data": {
+          "zip_code": "Postleitzahl (PLZ)",
+          "products": "Zu überwachende Weißbiere",
+          "stores": "Supermärkte / Discounter",
+          "scan_interval": "Abrufintervall (in Stunden)"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "Für diese Postleitzahl ist bereits eine Instanz eingerichtet."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Weissbier-Radar Einstellungen anpassen",
+        "data": {
+          "zip_code": "Postleitzahl (PLZ)",
+          "products": "Zu überwachende Weißbiere",
+          "stores": "Supermärkte / Discounter",
+          "scan_interval": "Abrufintervall (in Stunden)"
+        }
+      }
+    }
+  }
+}
