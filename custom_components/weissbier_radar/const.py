@@ -4,11 +4,12 @@ Constants for the Weissbier Radar integration.
 
 DOMAIN = "weissbier_radar"
 NAME = "Weissbier Radar"
-VERSION = "1.2.0"
+VERSION = "1.2.1"
 
 # Default configuration values
 DEFAULT_ZIP_CODE = "84385"
 DEFAULT_SCAN_INTERVAL_HOURS = 6
+DEFAULT_MIN_CRATE_PRICE = 9.00
 DEFAULT_DEAL_THRESHOLD = 20.00
 DEFAULT_REGULAR_PRICE = 20.49
 

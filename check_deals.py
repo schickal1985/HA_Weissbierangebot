@@ -25,6 +25,7 @@ HEADERS = {
 }
 
 DEFAULT_REGULAR_PRICE = 20.49
+MIN_CRATE_PRICE = 9.00
 DEAL_THRESHOLD = 20.00
 
 PRODUCTS = [
@@ -112,6 +113,8 @@ def parse_deals(p: dict) -> dict:
             "active": False
         }
 
+    rejected_single_bottle_stores = set()
+
     for url in [p["meinprospekt_url"], p["kaufda_url"]]:
         html = fetch_html(url)
         if not html:
@@ -142,9 +145,11 @@ def parse_deals(p: dict) -> dict:
                         
                         if price_raw and seller_name:
                             p_val = float(str(price_raw).replace(",", "."))
-                            if p_val < DEAL_THRESHOLD and is_date_valid(valid_until):
-                                for store in TARGET_STORES:
-                                    if any(alias.lower() in seller_name.lower() for alias in store["aliases"]):
+                            for store in TARGET_STORES:
+                                if any(alias.lower() in seller_name.lower() for alias in store["aliases"]):
+                                    if p_val < MIN_CRATE_PRICE:
+                                        rejected_single_bottle_stores.add(store["key"])
+                                    elif MIN_CRATE_PRICE <= p_val < DEAL_THRESHOLD and is_date_valid(valid_until):
                                         savings = max(0.0, reg_p - p_val)
                                         store_deals[store["key"]] = {
                                             "name": store["name"],
@@ -168,7 +173,7 @@ def parse_deals(p: dict) -> dict:
                         if is_date_valid(end_date):
                             for store in TARGET_STORES:
                                 if any(alias.lower() in event_name.lower() or alias.lower() in p_name.lower() for alias in store["aliases"]):
-                                    if not store_deals[store["key"]]["active"]:
+                                    if not store_deals[store["key"]]["active"] and store["key"] not in rejected_single_bottle_stores:
                                         deal_p = 12.99 if "franziskaner" in p["id"] else 13.99
                                         savings = max(0.0, reg_p - deal_p)
                                         store_deals[store["key"]] = {

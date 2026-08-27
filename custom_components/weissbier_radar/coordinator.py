@@ -19,6 +19,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import (
     DOMAIN,
     DEFAULT_SCAN_INTERVAL_HOURS,
+    DEFAULT_MIN_CRATE_PRICE,
     DEFAULT_DEAL_THRESHOLD,
     DEFAULT_REGULAR_PRICE,
     PRODUCT_DEFINITIONS,
@@ -157,6 +158,7 @@ class WeissbierRadarDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]])
             }
 
         found_deals: list[dict[str, Any]] = []
+        rejected_single_bottle_stores: set[str] = set()
 
         for html in html_list:
             soup = BeautifulSoup(html, "html.parser")
@@ -185,10 +187,20 @@ class WeissbierRadarDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]])
 
                             if price_raw and seller_name:
                                 price_val = float(str(price_raw).replace(",", "."))
-                                # Only accept as deal if price < threshold and date not expired
-                                if price_val < self.deal_threshold and is_date_valid(valid_until):
-                                    for store_key, store_meta in STORE_DEFINITIONS.items():
-                                        if any(alias.lower() in seller_name.lower() for alias in store_meta.get("aliases", [])):
+                                for store_key, store_meta in STORE_DEFINITIONS.items():
+                                    if any(alias.lower() in seller_name.lower() for alias in store_meta.get("aliases", [])):
+                                        # Filter out single bottles / small packs (< DEFAULT_MIN_CRATE_PRICE)
+                                        if price_val < DEFAULT_MIN_CRATE_PRICE:
+                                            _LOGGER.debug(
+                                                "Ignoring price %.2f € for %s at %s: Below minimum crate price %.2f € (single bottle/multipack)",
+                                                price_val,
+                                                prod_info["name"],
+                                                seller_name,
+                                                DEFAULT_MIN_CRATE_PRICE,
+                                            )
+                                            rejected_single_bottle_stores.add(store_key)
+                                        elif DEFAULT_MIN_CRATE_PRICE <= price_val < self.deal_threshold and is_date_valid(valid_until):
+                                            # Accept valid crate deal
                                             savings = max(0.0, regular_price - price_val)
                                             store_results[store_key].update({
                                                 "status": "Angebot aktiv",
@@ -216,7 +228,8 @@ class WeissbierRadarDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]])
                             if is_date_valid(end_date):
                                 for store_key, store_meta in STORE_DEFINITIONS.items():
                                     if any(alias.lower() in event_name.lower() or alias.lower() in p_name.lower() for alias in store_meta.get("aliases", [])):
-                                        if not store_results[store_key]["has_offer"]:
+                                        # Only consider SaleEvent if store was not explicitly identified as single-bottle only and has no offer yet
+                                        if not store_results[store_key]["has_offer"] and store_key not in rejected_single_bottle_stores:
                                             deal_p = 12.99 if "franziskaner" in prod_info["id"] else 13.99
                                             savings = max(0.0, regular_price - deal_p)
                                             store_results[store_key].update({

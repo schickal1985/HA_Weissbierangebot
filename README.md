@@ -59,31 +59,69 @@
 
 ---
 
-## 📱 Automations-Beispiel (Push-Nachricht aufs Smartphone)
+## 📱 Automations-Vorlagen (Push-Nachrichten bei Preisänderungen)
 
-Erstelle eine einfache Automation unter **Einstellungen -> Automatisierungen -> Neue Automatisierung**:
+Alle fertigen Automatisierungs-Vorlagen (sowohl als kompakte **Universal-Automation** für alle Sensoren als auch als **8 einzelne YAML-Konfigurationen**) findest du in der Datei [`automations.yaml`](file:///c:/Users/patri/Desktop/Antigravity/Weissbier/automations.yaml).
+
+### Fertige Automation: Preisüberwachung (an iPhone 13)
 
 ```yaml
-alias: "🍺 Weißbier-Angebot Alarm"
-description: "Sendet eine Push-Nachricht, wenn Franziskaner oder Erdinger im Angebot sind"
+alias: "🍺 Weißbier-Radar: Preisüberwachung (Alle Sensoren)"
+description: "Sendet eine kurze Push-Nachricht an das iPhone bei Angeboten oder wenn ein Angebot endet."
+mode: queued
+max: 10
 trigger:
   - platform: state
     entity_id:
       - sensor.franziskaner_weissbier_bester_preis
+      - sensor.franziskaner_weissbier_netto_marken_discount
+      - sensor.franziskaner_weissbier_edeka
+      - sensor.franziskaner_weissbier_kaufland
       - sensor.erdinger_weissbier_bester_preis
+      - sensor.erdinger_weissbier_netto_marken_discount
+      - sensor.erdinger_weissbier_edeka
+      - sensor.erdinger_weissbier_kaufland
 condition:
   - condition: template
-    value_template: "{{ trigger.to_state.state not in ['unavailable', 'unknown', 'Kein Angebot'] and trigger.to_state.state | float(0) <= 14.50 }}"
+    value_template: >
+      {{ trigger.from_state is defined 
+         and trigger.from_state is not none 
+         and trigger.to_state is not none 
+         and trigger.from_state.state not in ['unavailable', 'unknown'] 
+         and trigger.to_state.state not in ['unavailable', 'unknown'] 
+         and trigger.from_state.state | float(0) != trigger.to_state.state | float(0) }}
 action:
-  - service: notify.notify
-    data:
-      title: "🍺 Weißbier im Angebot!"
-      message: >
-        {{ state_attr(trigger.entity_id, 'produkt') }} ist aktuell bei 
-        {{ state_attr(trigger.entity_id, 'bester_haendler') }} für nur 
-        {{ trigger.to_state.state }} € im Angebot (Gültig bis {{ state_attr(trigger.entity_id, 'gueltig_bis') }}).
-      data:
-        url: "{{ state_attr(trigger.entity_id, 'angebots_link') }}"
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.to_state.state | float(0) < trigger.from_state.state | float(0) }}"
+        sequence:
+          - action: notify.mobile_app_sp_iphone_13
+            data:
+              title: >
+                {% set is_best = 'bester_preis' in trigger.entity_id %}
+                {% set haendler = state_attr(trigger.entity_id, 'bester_haendler') if is_best else state_attr(trigger.entity_id, 'haendler') %}
+                🍺 {{ state_attr(trigger.entity_id, 'produkt') }} bei {{ haendler }}: {{ trigger.to_state.state }} €
+              message: >
+                {% set is_best = 'bester_preis' in trigger.entity_id %}
+                {% set haendler = state_attr(trigger.entity_id, 'bester_haendler') if is_best else state_attr(trigger.entity_id, 'haendler') %}
+                {{ state_attr(trigger.entity_id, 'produkt') }} jetzt für {{ trigger.to_state.state }} € (vorher {{ trigger.from_state.state }} €) bei {{ haendler }}.
+              data:
+                url: "{{ state_attr(trigger.entity_id, 'angebots_link') }}"
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.to_state.state | float(0) > trigger.from_state.state | float(0) }}"
+        sequence:
+          - action: notify.mobile_app_sp_iphone_13
+            data:
+              title: >
+                {% set is_best = 'bester_preis' in trigger.entity_id %}
+                {% set haendler = state_attr(trigger.entity_id, 'bester_haendler') if is_best else state_attr(trigger.entity_id, 'haendler') %}
+                ℹ️ {{ state_attr(trigger.entity_id, 'produkt') }}: Kein Angebot mehr
+              message: >
+                {% set is_best = 'bester_preis' in trigger.entity_id %}
+                {% set haendler = state_attr(trigger.entity_id, 'bester_haendler') if is_best else state_attr(trigger.entity_id, 'haendler') %}
+                Preis bei {{ haendler }} wieder auf {{ trigger.to_state.state }} € gestiegen.
 ```
 
 ---

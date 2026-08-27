@@ -1,0 +1,66 @@
+# ==============================================================================
+# 🍺 WEISSBIER-RADAR - AUTOMATION FÜR HOME ASSISTANT
+# ==============================================================================
+# Ziel-Gerät: notify.mobile_app_sp_iphone_13
+# Überwacht alle Sensoren in einer einzigen kompakten Automation.
+# ==============================================================================
+
+alias: "🍺 Weißbier-Radar: Preisüberwachung (Alle Sensoren)"
+description: "Sendet eine kurze Push-Nachricht an das iPhone bei Angeboten oder wenn ein Angebot endet."
+mode: queued
+max: 10
+trigger:
+  - platform: state
+    entity_id:
+      - sensor.franziskaner_weissbier_bester_preis
+      - sensor.franziskaner_weissbier_netto_marken_discount
+      - sensor.franziskaner_weissbier_edeka
+      - sensor.franziskaner_weissbier_kaufland
+      - sensor.erdinger_weissbier_bester_preis
+      - sensor.erdinger_weissbier_netto_marken_discount
+      - sensor.erdinger_weissbier_edeka
+      - sensor.erdinger_weissbier_kaufland
+condition:
+  - condition: template
+    value_template: >
+      {{ trigger.from_state is defined 
+         and trigger.from_state is not none 
+         and trigger.to_state is not none 
+         and trigger.from_state.state not in ['unavailable', 'unknown'] 
+         and trigger.to_state.state not in ['unavailable', 'unknown'] 
+         and trigger.from_state.state | float(0) != trigger.to_state.state | float(0) }}
+action:
+  - choose:
+      # 🟢 FALL 1: PREIS GEFALLEN (Angebot aktiv)
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.to_state.state | float(0) < trigger.from_state.state | float(0) }}"
+        sequence:
+          - action: notify.mobile_app_sp_iphone_13
+            data:
+              title: >
+                {% set is_best = 'bester_preis' in trigger.entity_id %}
+                {% set haendler = state_attr(trigger.entity_id, 'bester_haendler') if is_best else state_attr(trigger.entity_id, 'haendler') %}
+                🍺 {{ state_attr(trigger.entity_id, 'produkt') }} bei {{ haendler }}: {{ trigger.to_state.state }} €
+              message: >
+                {% set is_best = 'bester_preis' in trigger.entity_id %}
+                {% set haendler = state_attr(trigger.entity_id, 'bester_haendler') if is_best else state_attr(trigger.entity_id, 'haendler') %}
+                {{ state_attr(trigger.entity_id, 'produkt') }} jetzt für {{ trigger.to_state.state }} € (vorher {{ trigger.from_state.state }} €) bei {{ haendler }}.
+              data:
+                url: "{{ state_attr(trigger.entity_id, 'angebots_link') }}"
+
+      # 🔴 FALL 2: PREIS GESTIEGEN (Angebot beendet)
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.to_state.state | float(0) > trigger.from_state.state | float(0) }}"
+        sequence:
+          - action: notify.mobile_app_sp_iphone_13
+            data:
+              title: >
+                {% set is_best = 'bester_preis' in trigger.entity_id %}
+                {% set haendler = state_attr(trigger.entity_id, 'bester_haendler') if is_best else state_attr(trigger.entity_id, 'haendler') %}
+                ℹ️ {{ state_attr(trigger.entity_id, 'produkt') }}: Kein Angebot mehr
+              message: >
+                {% set is_best = 'bester_preis' in trigger.entity_id %}
+                {% set haendler = state_attr(trigger.entity_id, 'bester_haendler') if is_best else state_attr(trigger.entity_id, 'haendler') %}
+                Preis bei {{ haendler }} wieder auf {{ trigger.to_state.state }} € gestiegen.
