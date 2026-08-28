@@ -30,6 +30,7 @@ from .const import (
     CONF_SCAN_INTERVAL,
     CONF_MIN_PRICE,
     CONF_MAX_PRICE,
+    CONF_REGULAR_PRICE,
     CONF_DEAL_THRESHOLD,
 )
 

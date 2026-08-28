@@ -4,7 +4,7 @@ Constants for the Weissbier Radar integration.
 
 DOMAIN = "weissbier_radar"
 NAME = "Weissbier Radar"
-VERSION = "1.3.1"
+VERSION = "1.3.2"
 
 # Default configuration values
 DEFAULT_ZIP_CODE = "84385"
