@@ -19,8 +19,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import (
     DOMAIN,
     DEFAULT_SCAN_INTERVAL_HOURS,
-    DEFAULT_MIN_CRATE_PRICE,
-    DEFAULT_DEAL_THRESHOLD,
+    DEFAULT_MIN_PRICE,
+    DEFAULT_MAX_PRICE,
     DEFAULT_REGULAR_PRICE,
     PRODUCT_DEFINITIONS,
     STORE_DEFINITIONS,
@@ -28,6 +28,8 @@ from .const import (
     CONF_STORES,
     CONF_ZIP_CODE,
     CONF_SCAN_INTERVAL,
+    CONF_MIN_PRICE,
+    CONF_MAX_PRICE,
     CONF_DEAL_THRESHOLD,
 )
 
@@ -70,7 +72,10 @@ class WeissbierRadarDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]])
         self.zip_code = entry_data.get(CONF_ZIP_CODE, "84385")
         self.selected_products = entry_data.get(CONF_PRODUCTS, list(PRODUCT_DEFINITIONS.keys()))
         self.selected_stores = entry_data.get(CONF_STORES, list(STORE_DEFINITIONS.keys()))
-        self.deal_threshold = float(entry_data.get(CONF_DEAL_THRESHOLD, DEFAULT_DEAL_THRESHOLD))
+        self.min_price = float(entry_data.get(CONF_MIN_PRICE, DEFAULT_MIN_PRICE))
+        self.max_price = float(
+            entry_data.get(CONF_MAX_PRICE, entry_data.get(CONF_DEAL_THRESHOLD, DEFAULT_MAX_PRICE))
+        )
         
         interval_hours = entry_data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL_HOURS)
         scan_interval = timedelta(hours=interval_hours)
@@ -189,18 +194,18 @@ class WeissbierRadarDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]])
                                 price_val = float(str(price_raw).replace(",", "."))
                                 for store_key, store_meta in STORE_DEFINITIONS.items():
                                     if any(alias.lower() in seller_name.lower() for alias in store_meta.get("aliases", [])):
-                                        # Filter out single bottles / small packs (< DEFAULT_MIN_CRATE_PRICE)
-                                        if price_val < DEFAULT_MIN_CRATE_PRICE:
+                                        # Filter out prices below configured min_price (e.g. single bottles < 10.00 €)
+                                        if price_val < self.min_price:
                                             _LOGGER.debug(
-                                                "Ignoring price %.2f € for %s at %s: Below minimum crate price %.2f € (single bottle/multipack)",
+                                                "Ignoring price %.2f € for %s at %s: Below minimum deal price %.2f € (single bottle/multipack)",
                                                 price_val,
                                                 prod_info["name"],
                                                 seller_name,
-                                                DEFAULT_MIN_CRATE_PRICE,
+                                                self.min_price,
                                             )
                                             rejected_single_bottle_stores.add(store_key)
-                                        elif DEFAULT_MIN_CRATE_PRICE <= price_val < self.deal_threshold and is_date_valid(valid_until):
-                                            # Accept valid crate deal
+                                        elif self.min_price <= price_val <= self.max_price and is_date_valid(valid_until):
+                                            # Accept valid deal within [min_price, max_price]
                                             savings = max(0.0, regular_price - price_val)
                                             store_results[store_key].update({
                                                 "status": "Angebot aktiv",

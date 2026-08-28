@@ -8,6 +8,8 @@
           "zip_code": "Postal code (PLZ)",
           "products": "Selected Beers",
           "stores": "Supermarkets / Discounters",
+          "min_price": "Minimum crate deal price (€)",
+          "max_price": "Maximum crate deal price (€)",
           "scan_interval": "Update interval (hours)"
         }
       }
@@ -24,6 +26,8 @@
           "zip_code": "Postal code (PLZ)",
           "products": "Selected Beers",
           "stores": "Supermarkets / Discounters",
+          "min_price": "Minimum crate deal price (€)",
+          "max_price": "Maximum crate deal price (€)",
           "scan_interval": "Update interval (hours)"
         }
       }
