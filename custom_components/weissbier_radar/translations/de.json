@@ -10,6 +10,7 @@
           "stores": "Supermärkte / Discounter",
           "min_price": "Minimaler Kastenpreis für Angebote (€)",
           "max_price": "Maximaler Kastenpreis für Angebote (€)",
+          "regular_price": "Regulärer Normalpreis (ohne Angebot) (€)",
           "scan_interval": "Abrufintervall (in Stunden)"
         }
       }
@@ -28,6 +29,7 @@
           "stores": "Supermärkte / Discounter",
           "min_price": "Minimaler Kastenpreis für Angebote (€)",
           "max_price": "Maximaler Kastenpreis für Angebote (€)",
+          "regular_price": "Regulärer Normalpreis (ohne Angebot) (€)",
           "scan_interval": "Abrufintervall (in Stunden)"
         }
       }

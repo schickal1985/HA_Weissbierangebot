@@ -76,6 +76,7 @@ class WeissbierRadarDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]])
         self.max_price = float(
             entry_data.get(CONF_MAX_PRICE, entry_data.get(CONF_DEAL_THRESHOLD, DEFAULT_MAX_PRICE))
         )
+        self.regular_price = float(entry_data.get(CONF_REGULAR_PRICE, DEFAULT_REGULAR_PRICE))
         
         interval_hours = entry_data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL_HOURS)
         scan_interval = timedelta(hours=interval_hours)
@@ -107,7 +108,7 @@ class WeissbierRadarDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]])
                     else:
                         results[prod_id] = {
                             "product_name": prod_info["name"],
-                            "best_price": prod_info.get("regular_price", DEFAULT_REGULAR_PRICE),
+                            "best_price": self.regular_price,
                             "valid_until": None,
                             "has_any_offer": False,
                             "stores": {},
@@ -144,7 +145,7 @@ class WeissbierRadarDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]])
         self, html_list: list[str], prod_info: dict[str, Any]
     ) -> dict[str, Any]:
         """Parse deals HTML synchronously inside executor thread."""
-        regular_price = float(prod_info.get("regular_price", DEFAULT_REGULAR_PRICE))
+        regular_price = self.regular_price
         store_results: dict[str, Any] = {}
 
         # Initialize all known stores with regular price (No offer)

@@ -4,7 +4,7 @@ Constants for the Weissbier Radar integration.
 
 DOMAIN = "weissbier_radar"
 NAME = "Weissbier Radar"
-VERSION = "1.3.0"
+VERSION = "1.3.1"
 
 # Default configuration values
 DEFAULT_ZIP_CODE = "84385"
@@ -13,7 +13,7 @@ DEFAULT_MIN_PRICE = 10.00
 DEFAULT_MAX_PRICE = 20.00
 DEFAULT_MIN_CRATE_PRICE = 10.00
 DEFAULT_DEAL_THRESHOLD = 20.00
-DEFAULT_REGULAR_PRICE = 20.49
+DEFAULT_REGULAR_PRICE = 21.49
 
 # Supported beers / products
 CONF_PRODUCTS = "products"
@@ -22,6 +22,7 @@ CONF_STORES = "stores"
 CONF_SCAN_INTERVAL = "scan_interval"
 CONF_MIN_PRICE = "min_price"
 CONF_MAX_PRICE = "max_price"
+CONF_REGULAR_PRICE = "regular_price"
 CONF_DEAL_THRESHOLD = "deal_threshold"
 
 DEFAULT_PRODUCTS = [

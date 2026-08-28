@@ -10,6 +10,7 @@
           "stores": "Supermarkets / Discounters",
           "min_price": "Minimum crate deal price (€)",
           "max_price": "Maximum crate deal price (€)",
+          "regular_price": "Regular price (when not on sale) (€)",
           "scan_interval": "Update interval (hours)"
         }
       }
@@ -28,6 +29,7 @@
           "stores": "Supermarkets / Discounters",
           "min_price": "Minimum crate deal price (€)",
           "max_price": "Maximum crate deal price (€)",
+          "regular_price": "Regular price (when not on sale) (€)",
           "scan_interval": "Update interval (hours)"
         }
       }

@@ -22,6 +22,7 @@ from .const import (
     DEFAULT_SCAN_INTERVAL_HOURS,
     DEFAULT_MIN_PRICE,
     DEFAULT_MAX_PRICE,
+    DEFAULT_REGULAR_PRICE,
     DEFAULT_PRODUCTS,
     DEFAULT_STORES,
     PRODUCT_DEFINITIONS,
@@ -32,6 +33,7 @@ from .const import (
     CONF_SCAN_INTERVAL,
     CONF_MIN_PRICE,
     CONF_MAX_PRICE,
+    CONF_REGULAR_PRICE,
     CONF_DEAL_THRESHOLD,
 )
 
@@ -96,8 +98,8 @@ class WeissbierRadarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ): selector.NumberSelector(
                     selector.NumberSelectorConfig(
                         min=1.0,
-                        max=30.0,
-                        step=0.5,
+                        max=40.0,
+                        step=0.05,
                         unit_of_measurement="€",
                         mode=selector.NumberSelectorMode.BOX,
                     )
@@ -107,8 +109,19 @@ class WeissbierRadarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ): selector.NumberSelector(
                     selector.NumberSelectorConfig(
                         min=1.0,
-                        max=30.0,
-                        step=0.5,
+                        max=40.0,
+                        step=0.05,
+                        unit_of_measurement="€",
+                        mode=selector.NumberSelectorMode.BOX,
+                    )
+                ),
+                vol.Required(
+                    CONF_REGULAR_PRICE, default=DEFAULT_REGULAR_PRICE
+                ): selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=1.0,
+                        max=40.0,
+                        step=0.05,
                         unit_of_measurement="€",
                         mode=selector.NumberSelectorMode.BOX,
                     )
@@ -198,8 +211,8 @@ class WeissbierRadarOptionsFlowHandler(config_entries.OptionsFlow):
                 ): selector.NumberSelector(
                     selector.NumberSelectorConfig(
                         min=1.0,
-                        max=30.0,
-                        step=0.5,
+                        max=40.0,
+                        step=0.05,
                         unit_of_measurement="€",
                         mode=selector.NumberSelectorMode.BOX,
                     )
@@ -215,8 +228,20 @@ class WeissbierRadarOptionsFlowHandler(config_entries.OptionsFlow):
                 ): selector.NumberSelector(
                     selector.NumberSelectorConfig(
                         min=1.0,
-                        max=30.0,
-                        step=0.5,
+                        max=40.0,
+                        step=0.05,
+                        unit_of_measurement="€",
+                        mode=selector.NumberSelectorMode.BOX,
+                    )
+                ),
+                vol.Required(
+                    CONF_REGULAR_PRICE,
+                    default=float(current_config.get(CONF_REGULAR_PRICE, DEFAULT_REGULAR_PRICE)),
+                ): selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=1.0,
+                        max=40.0,
+                        step=0.05,
                         unit_of_measurement="€",
                         mode=selector.NumberSelectorMode.BOX,
                     )

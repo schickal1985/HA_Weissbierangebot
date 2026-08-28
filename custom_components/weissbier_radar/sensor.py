@@ -114,19 +114,20 @@ class WeissbierBestPriceSensor(WeissbierBaseSensor):
         best_price = data.get("best_price")
         if best_price is not None:
             return float(best_price)
-        return float(self.prod_info.get("regular_price", 20.49))
+        return float(self.coordinator.regular_price)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return additional attributes."""
         data = self.product_data
         has_offer = data.get("has_any_offer", False)
+        normalpreis = float(data.get("normalpreis", self.coordinator.regular_price))
         
         return {
             "produkt": self.prod_info["name"],
             "im_angebot": has_offer,
             "status": "Angebot aktiv" if has_offer else "Regulärer Preis (Kein Angebot)",
-            "normalpreis": f"{data.get('normalpreis', 20.49):.2f} €",
+            "normalpreis": f"{normalpreis:.2f} €",
             "ersparnis": f"{data.get('ersparnis', 0.0):.2f} €",
             "bester_haendler": data.get("best_store", "Regulärer Handel"),
             "gueltig_bis": data.get("valid_until", "Dauerhaft"),
@@ -164,7 +165,7 @@ class WeissbierStoreSensor(WeissbierBaseSensor):
         price = store_data.get("price")
         if price is not None:
             return float(price)
-        return float(self.prod_info.get("regular_price", 20.49))
+        return float(self.coordinator.regular_price)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -173,12 +174,13 @@ class WeissbierStoreSensor(WeissbierBaseSensor):
         store_data = data.get("stores", {}).get(self.store_id, {})
         
         has_offer = store_data.get("has_offer", False)
+        normalpreis = float(store_data.get("normalpreis", self.coordinator.regular_price))
         return {
             "haendler": self.store_info["name"],
             "produkt": self.prod_info["name"],
             "im_angebot": has_offer,
             "status": "Angebot aktiv" if has_offer else "Regulärer Preis (Kein Angebot)",
-            "normalpreis": f"{store_data.get('normalpreis', 20.49):.2f} €",
+            "normalpreis": f"{normalpreis:.2f} €",
             "ersparnis": f"{store_data.get('ersparnis', 0.0):.2f} €",
             "gueltig_bis": store_data.get("valid_until") or "Dauerhaft",
             "filialen": store_data.get("locations", ""),

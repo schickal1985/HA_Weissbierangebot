@@ -24,7 +24,7 @@ HEADERS = {
     "Accept-Language": "de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7",
 }
 
-DEFAULT_REGULAR_PRICE = 20.49
+DEFAULT_REGULAR_PRICE = 21.49
 MIN_CRATE_PRICE = 10.00
 DEAL_THRESHOLD = 20.00
 
