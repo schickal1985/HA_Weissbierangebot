@@ -184,13 +184,11 @@ def parse_deals(p: dict) -> dict:
         if skey in specific_store_deals:
             p_val = specific_store_deals[skey]["price"]
             has_offer = (p_val < highest_price)
-            savings = max(0.0, round(highest_price - p_val, 2))
             store_deals[skey] = {
                 "name": store["name"],
                 "location": store["locations"],
                 "price": p_val,
                 "normalpreis": highest_price,
-                "ersparnis": savings,
                 "valid": specific_store_deals[skey]["valid"] or "Dauerhaft",
                 "active": has_offer,
             }
@@ -200,7 +198,6 @@ def parse_deals(p: dict) -> dict:
                 "location": store["locations"],
                 "price": highest_price,
                 "normalpreis": highest_price,
-                "ersparnis": 0.00,
                 "valid": "Dauerhaft",
                 "active": False,
             }
@@ -222,7 +219,7 @@ def check_deals():
 
         if active_deals:
             best_d = min(active_deals, key=lambda x: x["price"])
-            print(f"  ⭐ \033[1m\033[92mAKTIONSAKTIV: {best_d['name']} -> {best_d['price']:.2f} € (Ersparnis: {best_d['ersparnis']:.2f} €)\033[0m")
+            print(f"  ⭐ \033[1m\033[92mAKTIONSAKTIV: {best_d['name']} -> {best_d['price']:.2f} €\033[0m")
         else:
             best_d = min(deals.values(), key=lambda x: x["price"])
             print(f"  ℹ️  Aktuell kein Werbeangebot aktiv. Preis ca. {best_d['price']:.2f} €")
@@ -232,7 +229,7 @@ def check_deals():
             offer = deals.get(target["key"])
             if offer and offer["active"]:
                 valid_str = f"bis {offer['valid']}" if offer['valid'] else "diese Woche"
-                print(f"    ✅ \033[92m{target['name']:<24}\033[0m: \033[1m\033[93m{offer['price']:.2f} €\033[0m [Aktion {valid_str}, Ersparnis: {offer['ersparnis']:.2f} €]")
+                print(f"    ✅ \033[92m{target['name']:<24}\033[0m: \033[1m\033[93m{offer['price']:.2f} €\033[0m [Aktion {valid_str}]")
             else:
                 print(f"    ⚪ {target['name']:<24}: {offer['price']:.2f} € [Regulärer Preis / Kein Angebot]")
 

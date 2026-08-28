@@ -224,14 +224,12 @@ class WeissbierRadarDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]])
             if store_key in specific_store_deals:
                 p = specific_store_deals[store_key]["price"]
                 has_offer = (p < highest_price)
-                savings = max(0.0, round(highest_price - p, 2))
                 store_results[store_key] = {
                     "store": store_meta["name"],
                     "slug": store_key,
                     "status": "Angebot aktiv" if has_offer else "Regulärer Preis (Kein Angebot)",
                     "price": p,
                     "normalpreis": highest_price,
-                    "ersparnis": savings,
                     "valid_until": specific_store_deals[store_key]["valid_until"] or "Dauerhaft",
                     "has_offer": has_offer,
                     "locations": store_meta.get("locations", ""),
@@ -245,7 +243,6 @@ class WeissbierRadarDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]])
                     "status": "Regulärer Preis (Kein Angebot)",
                     "price": highest_price,
                     "normalpreis": highest_price,
-                    "ersparnis": 0.00,
                     "valid_until": "Dauerhaft",
                     "has_offer": False,
                     "locations": store_meta.get("locations", ""),
@@ -258,7 +255,6 @@ class WeissbierRadarDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]])
         best_store = best_deal["store"]
         best_valid = best_deal["valid_until"]
         has_any_offer = (best_price < highest_price)
-        best_savings = max(0.0, round(highest_price - best_price, 2))
 
         return {
             "product_name": prod_info["name"],
@@ -267,7 +263,6 @@ class WeissbierRadarDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]])
             "valid_until": best_valid,
             "has_any_offer": has_any_offer,
             "normalpreis": highest_price,
-            "ersparnis": best_savings,
             "stores": store_results,
             "url": prod_info.get("meinprospekt_url"),
         }
