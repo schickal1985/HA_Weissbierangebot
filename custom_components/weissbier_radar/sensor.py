@@ -39,8 +39,9 @@ async def async_setup_entry(
 
     entities: list[SensorEntity] = []
 
-    selected_products = entry.data.get(CONF_PRODUCTS, list(PRODUCT_DEFINITIONS.keys()))
-    selected_stores = entry.data.get(CONF_STORES, list(STORE_DEFINITIONS.keys()))
+    config_data = {**entry.data, **entry.options}
+    selected_products = config_data.get(CONF_PRODUCTS, list(PRODUCT_DEFINITIONS.keys()))
+    selected_stores = config_data.get(CONF_STORES, list(STORE_DEFINITIONS.keys()))
 
     for prod_id in selected_products:
         if prod_id not in PRODUCT_DEFINITIONS:

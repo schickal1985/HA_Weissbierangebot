@@ -117,9 +117,15 @@ class WeissbierRadarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class WeissbierRadarOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle options flow for Weissbier Radar."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: config_entries.ConfigEntry | None = None) -> None:
         """Initialize options flow."""
-        self.config_entry = config_entry
+        if config_entry is not None:
+            self._config_entry = config_entry
+
+    @property
+    def config_entry(self) -> config_entries.ConfigEntry:
+        """Return config entry."""
+        return self._config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -128,17 +134,20 @@ class WeissbierRadarOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
+        # Merge data and options to retrieve currently configured values
+        current_config = {**self.config_entry.data, **self.config_entry.options}
+
         schema = vol.Schema(
             {
                 vol.Required(
                     CONF_ZIP_CODE,
-                    default=self.config_entry.data.get(CONF_ZIP_CODE, DEFAULT_ZIP_CODE),
+                    default=current_config.get(CONF_ZIP_CODE, DEFAULT_ZIP_CODE),
                 ): selector.TextSelector(
                     selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT)
                 ),
                 vol.Required(
                     CONF_PRODUCTS,
-                    default=self.config_entry.data.get(CONF_PRODUCTS, DEFAULT_PRODUCTS),
+                    default=current_config.get(CONF_PRODUCTS, DEFAULT_PRODUCTS),
                 ): selector.SelectSelector(
                     selector.SelectSelectorConfig(
                         options=PRODUCT_OPTIONS,
@@ -148,7 +157,7 @@ class WeissbierRadarOptionsFlowHandler(config_entries.OptionsFlow):
                 ),
                 vol.Required(
                     CONF_STORES,
-                    default=self.config_entry.data.get(CONF_STORES, DEFAULT_STORES),
+                    default=current_config.get(CONF_STORES, DEFAULT_STORES),
                 ): selector.SelectSelector(
                     selector.SelectSelectorConfig(
                         options=STORE_OPTIONS,
@@ -158,7 +167,7 @@ class WeissbierRadarOptionsFlowHandler(config_entries.OptionsFlow):
                 ),
                 vol.Required(
                     CONF_SCAN_INTERVAL,
-                    default=self.config_entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL_HOURS),
+                    default=current_config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL_HOURS),
                 ): selector.NumberSelector(
                     selector.NumberSelectorConfig(
                         min=1,
