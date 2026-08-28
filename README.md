@@ -39,8 +39,8 @@
 
 1. Gehe in Home Assistant zu **Einstellungen -> Geräte & Dienste -> Integration hinzufügen**.
 2. Suche nach **„Weissbier Radar“**.
-3. Gib deine **Postleitzahl** (z. B. `84385`) ein, wähle deine gewünschten Händler und Sorten aus und passe optional den **Preisbereich für Angebote** (z. B. `10,00 €` bis `20,00 €`) an.
-4. Fertig! Die Sensoren werden sofort erstellt und aktualisiert. Über das **Zahnrad ⚙️ (Konfigurieren)** kannst du den Preisbereich jederzeit nachträglich ändern.
+3. Gib deine **Postleitzahl** (z. B. `84385`) ein und wähle deine gewünschten Händler und Sorten aus.
+4. Fertig! Die Sensoren werden sofort erstellt und ermitteln vollautomatisch den tagesaktuellen Bestpreis (alle Kastenpreise > 8,00 €). Über das **Zahnrad ⚙️ (Konfigurieren)** kannst du überwachte Händler und Sorten jederzeit anpassen.
 
 ---
 

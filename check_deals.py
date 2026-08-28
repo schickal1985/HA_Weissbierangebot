@@ -24,27 +24,26 @@ HEADERS = {
     "Accept-Language": "de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7",
 }
 
-DEFAULT_REGULAR_PRICE = 21.49
-MIN_CRATE_PRICE = 10.00
-DEAL_THRESHOLD = 20.00
+MIN_CRATE_PRICE = 8.00
+DEFAULT_FALLBACK_PRICE = 20.49
 
 PRODUCTS = [
     {
         "id": "franziskaner",
         "name": "Franziskaner Weißbier (20 x 0,5l Kasten)",
         "slug": "franziskaner",
-        "regular_price": 20.49,
         "meinprospekt_url": "https://www.meinprospekt.de/angebote/franziskaner",
         "kaufda_url": "https://www.kaufda.de/Angebote/Franziskaner",
+        "aktionspreis_url": "https://www.aktionspreis.de/angebote/franziskaner-kasten-20-x-0-5l",
         "icon": "🍺"
     },
     {
         "id": "erdinger",
         "name": "Erdinger Weißbier (20 x 0,5l Kasten)",
         "slug": "erdinger",
-        "regular_price": 20.49,
         "meinprospekt_url": "https://www.meinprospekt.de/angebote/erdinger",
         "kaufda_url": "https://www.kaufda.de/Angebote/Erdinger",
+        "aktionspreis_url": "https://www.aktionspreis.de/angebote/erdinger-kasten-20-x-0-5l",
         "icon": "🍻"
     }
 ]
@@ -98,24 +97,13 @@ def fetch_html(url: str) -> str:
         return ""
 
 def parse_deals(p: dict) -> dict:
-    store_deals = {}
-    reg_p = p.get("regular_price", DEFAULT_REGULAR_PRICE)
-
-    # Pre-populate with regular price
-    for store in TARGET_STORES:
-        store_deals[store["key"]] = {
-            "name": store["name"],
-            "location": store["locations"],
-            "price": reg_p,
-            "normalpreis": reg_p,
-            "ersparnis": 0.00,
-            "valid": "Dauerhaft",
-            "active": False
-        }
-
+    all_found_prices = []
+    specific_store_deals = {}
     rejected_single_bottle_stores = set()
 
-    for url in [p["meinprospekt_url"], p["kaufda_url"]]:
+    for url in [p.get("meinprospekt_url"), p.get("kaufda_url"), p.get("aktionspreis_url")]:
+        if not url:
+            continue
         html = fetch_html(url)
         if not html:
             continue
@@ -143,23 +131,26 @@ def parse_deals(p: dict) -> dict:
                         seller = target_off.get("seller", {}) or target_off.get("manufacturer", {})
                         seller_name = seller.get("name", "") if isinstance(seller, dict) else str(seller)
                         
-                        if price_raw and seller_name:
+                        if price_raw:
                             p_val = float(str(price_raw).replace(",", "."))
-                            for store in TARGET_STORES:
-                                if any(alias.lower() in seller_name.lower() for alias in store["aliases"]):
-                                    if p_val < MIN_CRATE_PRICE:
-                                        rejected_single_bottle_stores.add(store["key"])
-                                    elif MIN_CRATE_PRICE <= p_val < DEAL_THRESHOLD and is_date_valid(valid_until):
-                                        savings = max(0.0, reg_p - p_val)
-                                        store_deals[store["key"]] = {
-                                            "name": store["name"],
-                                            "location": store["locations"],
-                                            "price": p_val,
-                                            "normalpreis": reg_p,
-                                            "ersparnis": round(savings, 2),
-                                            "valid": valid_until,
-                                            "active": True
-                                        }
+                            if p_val <= MIN_CRATE_PRICE:
+                                if seller_name:
+                                    for store in TARGET_STORES:
+                                        if any(alias.lower() in seller_name.lower() for alias in store["aliases"]):
+                                            rejected_single_bottle_stores.add(store["key"])
+                                continue
+                            
+                            if is_date_valid(valid_until):
+                                all_found_prices.append(p_val)
+                                if seller_name:
+                                    for store in TARGET_STORES:
+                                        if any(alias.lower() in seller_name.lower() for alias in store["aliases"]):
+                                            if store["key"] not in specific_store_deals or p_val < specific_store_deals[store["key"]]["price"]:
+                                                specific_store_deals[store["key"]] = {
+                                                    "price": p_val,
+                                                    "valid": valid_until,
+                                                    "name": store["name"],
+                                                }
 
                 # SaleEvents
                 items = data.get("itemListElement", [])
@@ -173,21 +164,47 @@ def parse_deals(p: dict) -> dict:
                         if is_date_valid(end_date):
                             for store in TARGET_STORES:
                                 if any(alias.lower() in event_name.lower() or alias.lower() in p_name.lower() for alias in store["aliases"]):
-                                    if not store_deals[store["key"]]["active"] and store["key"] not in rejected_single_bottle_stores:
+                                    if store["key"] not in specific_store_deals and store["key"] not in rejected_single_bottle_stores:
                                         deal_p = 12.99 if "franziskaner" in p["id"] else 13.99
-                                        savings = max(0.0, reg_p - deal_p)
-                                        store_deals[store["key"]] = {
-                                            "name": store["name"],
-                                            "location": store["locations"],
+                                        all_found_prices.append(deal_p)
+                                        specific_store_deals[store["key"]] = {
                                             "price": deal_p,
-                                            "normalpreis": reg_p,
-                                            "ersparnis": round(savings, 2),
                                             "valid": end_date,
-                                            "active": True
+                                            "name": store["name"],
                                         }
             except Exception:
                 pass
                 
+    highest_price = max(all_found_prices) if all_found_prices else DEFAULT_FALLBACK_PRICE
+    highest_price = max(highest_price, DEFAULT_FALLBACK_PRICE)
+
+    store_deals = {}
+    for store in TARGET_STORES:
+        skey = store["key"]
+        if skey in specific_store_deals:
+            p_val = specific_store_deals[skey]["price"]
+            has_offer = (p_val < highest_price)
+            savings = max(0.0, round(highest_price - p_val, 2))
+            store_deals[skey] = {
+                "name": store["name"],
+                "location": store["locations"],
+                "price": p_val,
+                "normalpreis": highest_price,
+                "ersparnis": savings,
+                "valid": specific_store_deals[skey]["valid"] or "Dauerhaft",
+                "active": has_offer,
+            }
+        else:
+            store_deals[skey] = {
+                "name": store["name"],
+                "location": store["locations"],
+                "price": highest_price,
+                "normalpreis": highest_price,
+                "ersparnis": 0.00,
+                "valid": "Dauerhaft",
+                "active": False,
+            }
+
     return store_deals
 
 def check_deals():
@@ -207,7 +224,8 @@ def check_deals():
             best_d = min(active_deals, key=lambda x: x["price"])
             print(f"  ⭐ \033[1m\033[92mAKTIONSAKTIV: {best_d['name']} -> {best_d['price']:.2f} € (Ersparnis: {best_d['ersparnis']:.2f} €)\033[0m")
         else:
-            print(f"  ℹ️  Aktuell kein Werbeangebot (< 20 €) aktiv. Normalpreis ca. {p['regular_price']:.2f} €")
+            best_d = min(deals.values(), key=lambda x: x["price"])
+            print(f"  ℹ️  Aktuell kein Werbeangebot aktiv. Preis ca. {best_d['price']:.2f} €")
 
         print("\n  Deine lokalen Filialen:")
         for target in TARGET_STORES:

@@ -20,9 +20,6 @@ from .const import (
     NAME,
     DEFAULT_ZIP_CODE,
     DEFAULT_SCAN_INTERVAL_HOURS,
-    DEFAULT_MIN_PRICE,
-    DEFAULT_MAX_PRICE,
-    DEFAULT_REGULAR_PRICE,
     DEFAULT_PRODUCTS,
     DEFAULT_STORES,
     PRODUCT_DEFINITIONS,
@@ -31,10 +28,6 @@ from .const import (
     CONF_PRODUCTS,
     CONF_STORES,
     CONF_SCAN_INTERVAL,
-    CONF_MIN_PRICE,
-    CONF_MAX_PRICE,
-    CONF_REGULAR_PRICE,
-    CONF_DEAL_THRESHOLD,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -91,39 +84,6 @@ class WeissbierRadarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         options=STORE_OPTIONS,
                         multiple=True,
                         mode=selector.SelectSelectorMode.LIST,
-                    )
-                ),
-                vol.Required(
-                    CONF_MIN_PRICE, default=DEFAULT_MIN_PRICE
-                ): selector.NumberSelector(
-                    selector.NumberSelectorConfig(
-                        min=1.0,
-                        max=40.0,
-                        step=0.05,
-                        unit_of_measurement="€",
-                        mode=selector.NumberSelectorMode.BOX,
-                    )
-                ),
-                vol.Required(
-                    CONF_MAX_PRICE, default=DEFAULT_MAX_PRICE
-                ): selector.NumberSelector(
-                    selector.NumberSelectorConfig(
-                        min=1.0,
-                        max=40.0,
-                        step=0.05,
-                        unit_of_measurement="€",
-                        mode=selector.NumberSelectorMode.BOX,
-                    )
-                ),
-                vol.Required(
-                    CONF_REGULAR_PRICE, default=DEFAULT_REGULAR_PRICE
-                ): selector.NumberSelector(
-                    selector.NumberSelectorConfig(
-                        min=1.0,
-                        max=40.0,
-                        step=0.05,
-                        unit_of_measurement="€",
-                        mode=selector.NumberSelectorMode.BOX,
                     )
                 ),
                 vol.Required(
@@ -203,47 +163,6 @@ class WeissbierRadarOptionsFlowHandler(config_entries.OptionsFlow):
                         options=STORE_OPTIONS,
                         multiple=True,
                         mode=selector.SelectSelectorMode.LIST,
-                    )
-                ),
-                vol.Required(
-                    CONF_MIN_PRICE,
-                    default=float(current_config.get(CONF_MIN_PRICE, DEFAULT_MIN_PRICE)),
-                ): selector.NumberSelector(
-                    selector.NumberSelectorConfig(
-                        min=1.0,
-                        max=40.0,
-                        step=0.05,
-                        unit_of_measurement="€",
-                        mode=selector.NumberSelectorMode.BOX,
-                    )
-                ),
-                vol.Required(
-                    CONF_MAX_PRICE,
-                    default=float(
-                        current_config.get(
-                            CONF_MAX_PRICE,
-                            current_config.get(CONF_DEAL_THRESHOLD, DEFAULT_MAX_PRICE),
-                        )
-                    ),
-                ): selector.NumberSelector(
-                    selector.NumberSelectorConfig(
-                        min=1.0,
-                        max=40.0,
-                        step=0.05,
-                        unit_of_measurement="€",
-                        mode=selector.NumberSelectorMode.BOX,
-                    )
-                ),
-                vol.Required(
-                    CONF_REGULAR_PRICE,
-                    default=float(current_config.get(CONF_REGULAR_PRICE, DEFAULT_REGULAR_PRICE)),
-                ): selector.NumberSelector(
-                    selector.NumberSelectorConfig(
-                        min=1.0,
-                        max=40.0,
-                        step=0.05,
-                        unit_of_measurement="€",
-                        mode=selector.NumberSelectorMode.BOX,
                     )
                 ),
                 vol.Required(
